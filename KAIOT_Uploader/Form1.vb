@@ -1,4 +1,4 @@
-﻿Imports System.Net
+﻿Imports System.Diagnostics
 
 Public Class Form1
 
@@ -25,7 +25,7 @@ Public Class Form1
         End Using
     End Sub
 
-    Private Async Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
         Dim ftpServer As String = TextBox2.Text
         Dim targetFolder As String = TextBox3.Text
         Dim filePath1 As String = NumericUpDown1.Value.ToString()
@@ -49,7 +49,7 @@ Public Class Form1
         Dim ftpPassword As String = TextBox5.Text
 
         Try
-            ' 画像ファイルごとに処理を実行
+            ' 画像ファイルごとにFTPアップロードを実行
             For i As Integer = 0 To imageFiles.Length - 1
                 Dim originalFileName As String = imageFiles(i)
                 Dim newFileName As String
@@ -63,21 +63,45 @@ Public Class Form1
                 End If
 
                 ' アップロード先のパスを作成
-                Dim ftpFullPath As String = $"{ftpServer}/{targetFolder}/{filePath1}/{filePath2}/{newFileName}"
+                Dim remoteFilePath As String = $"{targetFolder}/{filePath1}/{filePath2}/{newFileName}"
 
-                ' 既存のファイルがあるかチェック
-                If Await FileExistsOnFtp(ftpFullPath, ftpUserName, ftpPassword) Then
-                    Dim result = MessageBox.Show($"ファイル {newFileName} は既に存在します。上書きしますか？", "確認", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning)
-                    If result = DialogResult.Cancel Then
-                        Exit For
-                    ElseIf result = DialogResult.No Then
-                        Continue For ' 次のファイルへ
+                ' FTPスクリプトを作成
+                Dim ftpCommands As String = String.Join(Environment.NewLine, {
+                    $"open {ftpServer}",
+                    ftpUserName,
+                    ftpPassword,
+                    $"put ""{originalFileName}"" ""{remoteFilePath}""",
+                    "bye"
+                })
+
+                ' 一時ファイルにFTPスクリプトを保存
+                Dim tempScriptPath As String = IO.Path.Combine(IO.Path.GetTempPath(), "ftpScript.txt")
+                IO.File.WriteAllText(tempScriptPath, ftpCommands)
+
+                ' コマンドプロンプトでftpコマンドを実行
+                Dim startInfo As New ProcessStartInfo("cmd.exe") With {
+                    .RedirectStandardInput = True,
+                    .RedirectStandardOutput = True,
+                    .RedirectStandardError = True,
+                    .UseShellExecute = False,
+                    .CreateNoWindow = True
+                }
+
+                Dim process As Process = Process.Start(startInfo)
+                Using writer As IO.StreamWriter = process.StandardInput
+                    If writer.BaseStream.CanWrite Then
+                        writer.WriteLine($"ftp -s:""{tempScriptPath}""")
                     End If
-                    ' Yesの場合は上書き処理を続ける
-                End If
+                End Using
 
-                ' FTPサーバーにファイルをアップロード
-                Await UploadFileToFtp(ftpFullPath, originalFileName, ftpUserName, ftpPassword)
+                process.WaitForExit()
+
+                ' 結果を表示
+                Dim output As String = process.StandardOutput.ReadToEnd()
+                MessageBox.Show(output, "FTP Results", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+                ' 一時ファイルを削除
+                IO.File.Delete(tempScriptPath)
             Next
 
             MessageBox.Show("ファイルのアップロードが完了しました。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -85,49 +109,5 @@ Public Class Form1
             MessageBox.Show("エラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-
-    ' FTPサーバーに指定したファイルが存在するか確認する関数
-    Private Async Function FileExistsOnFtp(ftpFullPath As String, ftpUserName As String, ftpPassword As String) As Task(Of Boolean)
-        Try
-            Dim request As System.Net.FtpWebRequest = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
-            request.Credentials = New NetworkCredential(ftpUserName, ftpPassword)
-            request.Method = WebRequestMethods.Ftp.GetFileSize
-            request.UseBinary = False
-            request.UsePassive = False
-
-            Using response = CType(Await request.GetResponseAsync(), FtpWebResponse)
-                Return response.StatusCode = FtpStatusCode.FileStatus
-            End Using
-        Catch ex As WebException
-            If CType(ex.Response, FtpWebResponse).StatusCode = FtpStatusCode.ActionNotTakenFileUnavailable Then
-                Return False
-            Else
-                Throw
-            End If
-        End Try
-    End Function
-
-    ' FTPサーバーにファイルをアップロードする関数
-    Private Async Function UploadFileToFtp(ftpFullPath As String, localFilePath As String, ftpUserName As String, ftpPassword As String) As Task
-        Dim request = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
-        request.Credentials = New NetworkCredential(ftpUserName, ftpPassword)
-        request.Method = WebRequestMethods.Ftp.UploadFile
-        request.UseBinary = False
-        request.UsePassive = False
-
-        ' ファイルの内容を読み込んでアップロード
-        Using fileStream As New IO.FileStream(localFilePath, IO.FileMode.Open, IO.FileAccess.Read)
-            Using requestStream = Await request.GetRequestStreamAsync()
-                Await fileStream.CopyToAsync(requestStream)
-            End Using
-        End Using
-
-        ' アップロード結果を確認
-        Using response = CType(Await request.GetResponseAsync(), FtpWebResponse)
-            If response.StatusCode <> FtpStatusCode.ClosingData Then
-                Throw New Exception($"FTPアップロードに失敗しました: {response.StatusDescription}")
-            End If
-        End Using
-    End Function
 
 End Class
