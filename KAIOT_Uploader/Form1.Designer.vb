@@ -39,6 +39,7 @@ Partial Class Form1
         Me.Label7 = New System.Windows.Forms.Label()
         Me.ComboBox1 = New System.Windows.Forms.ComboBox()
         Me.NumericUpDown1 = New System.Windows.Forms.NumericUpDown()
+        Me.RichTextBox1 = New System.Windows.Forms.RichTextBox()
         CType(Me.NumericUpDown1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -175,11 +176,20 @@ Partial Class Form1
         Me.NumericUpDown1.Size = New System.Drawing.Size(120, 23)
         Me.NumericUpDown1.TabIndex = 16
         '
+        'RichTextBox1
+        '
+        Me.RichTextBox1.Location = New System.Drawing.Point(12, 250)
+        Me.RichTextBox1.Name = "RichTextBox1"
+        Me.RichTextBox1.Size = New System.Drawing.Size(564, 253)
+        Me.RichTextBox1.TabIndex = 17
+        Me.RichTextBox1.Text = ""
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(592, 252)
+        Me.ClientSize = New System.Drawing.Size(592, 528)
+        Me.Controls.Add(Me.RichTextBox1)
         Me.Controls.Add(Me.NumericUpDown1)
         Me.Controls.Add(Me.ComboBox1)
         Me.Controls.Add(Me.Label7)
@@ -221,4 +231,5 @@ Partial Class Form1
     Friend WithEvents Label7 As Label
     Friend WithEvents ComboBox1 As ComboBox
     Friend WithEvents NumericUpDown1 As NumericUpDown
+    Friend WithEvents RichTextBox1 As RichTextBox
 End Class

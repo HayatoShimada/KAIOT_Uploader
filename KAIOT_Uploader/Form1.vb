@@ -49,6 +49,8 @@ Public Class Form1
         Dim ftpPassword As String = TextBox5.Text
 
         Try
+            RichTextBox1.Clear() ' 結果表示用のリッチテキストボックスをクリア
+
             ' 画像ファイルごとにFTPアップロードを実行
             For i As Integer = 0 To imageFiles.Length - 1
                 Dim originalFileName As String = imageFiles(i)
@@ -96,9 +98,9 @@ Public Class Form1
 
                 process.WaitForExit()
 
-                ' 結果を表示
+                ' 結果を取得してリッチテキストボックスに表示
                 Dim output As String = process.StandardOutput.ReadToEnd()
-                MessageBox.Show(output, "FTP Results", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                RichTextBox1.AppendText(output & Environment.NewLine)
 
                 ' 一時ファイルを削除
                 IO.File.Delete(tempScriptPath)
