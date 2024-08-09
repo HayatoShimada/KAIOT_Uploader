@@ -180,6 +180,9 @@ Public Class Form1
                 End If
             Next
 
+            RichTextBox1.AppendText(output & Environment.NewLine)
+
+
             ' 一時ファイルを削除
             IO.File.Delete(tempScriptPath)
         Catch ex As Exception
@@ -250,12 +253,13 @@ Public Class Form1
             End Using
 
             process.WaitForExit()
+            Dim output As String = process.StandardOutput.ReadToEnd()
+
+            RichTextBox1.AppendText(output & Environment.NewLine)
 
             ' ダウンロードした画像をPictureBoxに表示
             PictureBox1.Image = Image.FromFile(localTempFile)
 
-            ' 一時ファイルを削除
-            IO.File.Delete(tempScriptPath)
         Catch ex As Exception
             MessageBox.Show("画像のダウンロード中にエラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
