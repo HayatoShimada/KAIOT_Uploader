@@ -215,26 +215,47 @@ Public Class Form1
         End Select
 
 
-        ' FTPから画像をダウンロード
-        Dim ftpFullPath As String = $"ftp://{ftpServer}/{targetFolder}/{selectedFile}/{filePath1}/{filePath2}"
+        ' ローカルにダウンロードするパスを設定
         Dim localTempFile As String = IO.Path.Combine(IO.Path.GetTempPath(), selectedFile)
 
         Try
-            Dim request As FtpWebRequest = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
-            request.Credentials = New NetworkCredential(ftpUserName, ftpPassword)
-            request.Method = WebRequestMethods.Ftp.DownloadFile
+            ' FTPスクリプトを生成
+            Dim ftpCommands As String = String.Join(Environment.NewLine, {
+                $"open {ftpServer}",
+                ftpUserName,
+                ftpPassword,
+                $"cd {targetFolder}/{filePath1}/{filePath2}",
+                $"get {selectedFile} {localTempFile}", ' ファイルをダウンロード
+                "bye"
+            })
 
-            Using response As FtpWebResponse = CType(request.GetResponse(), FtpWebResponse)
-                Using responseStream As IO.Stream = response.GetResponseStream()
-                    Using fileStream As New IO.FileStream(localTempFile, IO.FileMode.Create)
-                        responseStream.CopyTo(fileStream)
-                    End Using
-                End Using
+            ' 一時ファイルにFTPスクリプトを保存
+            Dim tempScriptPath As String = IO.Path.Combine(IO.Path.GetTempPath(), "ftpDownloadScript.txt")
+            IO.File.WriteAllText(tempScriptPath, ftpCommands)
+
+            ' コマンドプロンプトでftpコマンドを実行
+            Dim startInfo As New ProcessStartInfo("cmd.exe") With {
+                .RedirectStandardInput = True,
+                .RedirectStandardOutput = True,
+                .RedirectStandardError = True,
+                .UseShellExecute = False,
+                .CreateNoWindow = True
+            }
+
+            Dim process As Process = Process.Start(startInfo)
+            Using writer As IO.StreamWriter = process.StandardInput
+                If writer.BaseStream.CanWrite Then
+                    writer.WriteLine($"ftp -s:""{tempScriptPath}""")
+                End If
             End Using
+
+            process.WaitForExit()
 
             ' ダウンロードした画像をPictureBoxに表示
             PictureBox1.Image = Image.FromFile(localTempFile)
 
+            ' 一時ファイルを削除
+            IO.File.Delete(tempScriptPath)
         Catch ex As Exception
             MessageBox.Show("画像のダウンロード中にエラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
