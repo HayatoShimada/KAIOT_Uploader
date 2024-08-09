@@ -1,5 +1,4 @@
 ﻿Imports System.Net
-Imports System.Net.Http
 
 Public Class Form1
 
@@ -50,66 +49,81 @@ Public Class Form1
         Dim ftpPassword As String = TextBox5.Text
 
         Try
-            ' HttpClientの初期化
-            Using client As New HttpClient()
-                ' 認証情報の設定
-                Dim byteArray As Byte() = System.Text.Encoding.ASCII.GetBytes($"{ftpUserName}:{ftpPassword}")
-                client.DefaultRequestHeaders.Authorization = New System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray))
+            ' 画像ファイルごとに処理を実行
+            For i As Integer = 0 To imageFiles.Length - 1
+                Dim originalFileName As String = imageFiles(i)
+                Dim newFileName As String
 
-                ' 画像ファイルごとに処理を実行
-                For i As Integer = 0 To imageFiles.Length - 1
-                    Dim originalFileName As String = imageFiles(i)
-                    Dim newFileName As String
+                ' ファイル名に番号が既に割り振られているか確認
+                Dim fileNameWithoutExtension As String = IO.Path.GetFileNameWithoutExtension(originalFileName)
+                If IsNumeric(fileNameWithoutExtension) Then
+                    newFileName = fileNameWithoutExtension & ".jpg"
+                Else
+                    newFileName = i.ToString() & ".jpg" ' 番号を割り振り
+                End If
 
-                    ' ファイル名に番号が既に割り振られているか確認
-                    Dim fileNameWithoutExtension As String = IO.Path.GetFileNameWithoutExtension(originalFileName)
-                    If IsNumeric(fileNameWithoutExtension) Then
-                        newFileName = fileNameWithoutExtension & ".jpg"
-                    Else
-                        newFileName = i.ToString() & ".jpg" ' 番号を割り振り
+                ' アップロード先のパスを作成
+                Dim ftpFullPath As String = $"{ftpServer}/{targetFolder}/{filePath1}/{filePath2}/{newFileName}"
+
+                ' 既存のファイルがあるかチェック
+                If Await FileExistsOnFtp(ftpFullPath, ftpUserName, ftpPassword) Then
+                    Dim result = MessageBox.Show($"ファイル {newFileName} は既に存在します。上書きしますか？", "確認", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning)
+                    If result = DialogResult.Cancel Then
+                        Exit For
+                    ElseIf result = DialogResult.No Then
+                        Continue For ' 次のファイルへ
                     End If
+                    ' Yesの場合は上書き処理を続ける
+                End If
 
-                    ' アップロード先のパスを作成
-                    Dim ftpFullPath As String = $"{ftpServer}/{targetFolder}/{filePath1}/{filePath2}/{newFileName}"
+                ' FTPサーバーにファイルをアップロード
+                Await UploadFileToFtp(ftpFullPath, originalFileName, ftpUserName, ftpPassword)
+            Next
 
-                    ' 既存のファイルがあるかチェック
-                    If Await FileExistsOnFtp(client, ftpFullPath) Then
-                        Dim result = MessageBox.Show($"ファイル {newFileName} は既に存在します。上書きしますか？", "確認", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning)
-                        If result = DialogResult.Cancel Then
-                            Exit For
-                        ElseIf result = DialogResult.No Then
-                            Continue For ' 次のファイルへ
-                        End If
-                        ' Yesの場合は上書き処理を続ける
-                    End If
-
-                    ' ファイルの内容を読み込み
-                    Dim fileContent As ByteArrayContent
-                    Using fileStream As New IO.FileStream(originalFileName, IO.FileMode.Open, IO.FileAccess.Read)
-                        fileContent = New ByteArrayContent(New IO.BinaryReader(fileStream).ReadBytes(CInt(fileStream.Length)))
-                    End Using
-
-                    ' FTPサーバーにファイルをアップロード
-                    Dim response As HttpResponseMessage = Await client.PutAsync(ftpFullPath, fileContent)
-                    response.EnsureSuccessStatusCode()
-                Next
-
-                MessageBox.Show("ファイルのアップロードが完了しました。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            End Using
+            MessageBox.Show("ファイルのアップロードが完了しました。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
             MessageBox.Show("エラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     ' FTPサーバーに指定したファイルが存在するか確認する関数
-    Private Async Function FileExistsOnFtp(client As HttpClient, ftpFullPath As String) As Task(Of Boolean)
+    Private Async Function FileExistsOnFtp(ftpFullPath As String, ftpUserName As String, ftpPassword As String) As Task(Of Boolean)
         Try
-            Dim request = New HttpRequestMessage(HttpMethod.Head, ftpFullPath)
-            Dim response = Await client.SendAsync(request)
-            Return response.IsSuccessStatusCode
-        Catch ex As Exception
-            Return False
+            Dim request = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
+            request.Credentials = New NetworkCredential(ftpUserName, ftpPassword)
+            request.Method = WebRequestMethods.Ftp.GetFileSize
+
+            Using response = CType(Await request.GetResponseAsync(), FtpWebResponse)
+                Return response.StatusCode = FtpStatusCode.FileStatus
+            End Using
+        Catch ex As WebException
+            If CType(ex.Response, FtpWebResponse).StatusCode = FtpStatusCode.ActionNotTakenFileUnavailable Then
+                Return False
+            Else
+                Throw
+            End If
         End Try
+    End Function
+
+    ' FTPサーバーにファイルをアップロードする関数
+    Private Async Function UploadFileToFtp(ftpFullPath As String, localFilePath As String, ftpUserName As String, ftpPassword As String) As Task
+        Dim request = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
+        request.Credentials = New NetworkCredential(ftpUserName, ftpPassword)
+        request.Method = WebRequestMethods.Ftp.UploadFile
+
+        ' ファイルの内容を読み込んでアップロード
+        Using fileStream As New IO.FileStream(localFilePath, IO.FileMode.Open, IO.FileAccess.Read)
+            Using requestStream = Await request.GetRequestStreamAsync()
+                Await fileStream.CopyToAsync(requestStream)
+            End Using
+        End Using
+
+        ' アップロード結果を確認
+        Using response = CType(Await request.GetResponseAsync(), FtpWebResponse)
+            If response.StatusCode <> FtpStatusCode.ClosingData Then
+                Throw New Exception($"FTPアップロードに失敗しました: {response.StatusDescription}")
+            End If
+        End Using
     End Function
 
 End Class
