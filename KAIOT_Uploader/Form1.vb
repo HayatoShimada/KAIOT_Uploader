@@ -3,7 +3,7 @@ Imports System.Net.Http
 
 Public Class Form1
 
-    Public sImageName As String
+    Public imageFiles As String()
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         TextBox2.Text = My.Settings.pFTPadd
@@ -17,10 +17,11 @@ Public Class Form1
             With ofd_IO
                 .Title = "画像選択"
                 .Filter = "jpgファイル|*.jpg"
+                .Multiselect = True ' 複数選択を許可
             End With
             If ofd_IO.ShowDialog() = DialogResult.OK Then
-                sImageName = ofd_IO.FileName
-                TextBox1.Text = sImageName
+                imageFiles = ofd_IO.FileNames
+                TextBox1.Text = String.Join(", ", imageFiles)
             End If
         End Using
     End Sub
@@ -45,29 +46,42 @@ Public Class Form1
                 filePath2 = "4"
         End Select
 
-        Dim fileName As String = TextBox1.Text
-        Dim ftpFullPath As String = $"{ftpServer}/{targetFolder}/{filePath1}/{filePath2}/{IO.Path.GetFileName(fileName)}"
-
         Dim ftpUserName As String = TextBox4.Text
         Dim ftpPassword As String = TextBox5.Text
 
         Try
             ' HttpClientの初期化
             Using client As New HttpClient()
-
                 ' 認証情報の設定
                 Dim byteArray As Byte() = System.Text.Encoding.ASCII.GetBytes($"{ftpUserName}:{ftpPassword}")
                 client.DefaultRequestHeaders.Authorization = New System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray))
 
-                ' ファイルの内容を読み込み
-                Dim fileContent As ByteArrayContent
-                Using fileStream As New IO.FileStream(fileName, IO.FileMode.Open, IO.FileAccess.Read)
-                    fileContent = New ByteArrayContent(New IO.BinaryReader(fileStream).ReadBytes(CInt(fileStream.Length)))
-                End Using
+                ' 画像ファイルごとに処理を実行
+                For i As Integer = 0 To imageFiles.Length - 1
+                    Dim originalFileName As String = imageFiles(i)
+                    Dim newFileName As String
 
-                ' FTPサーバーにファイルをアップロード
-                Dim response As HttpResponseMessage = Await client.PutAsync(ftpFullPath, fileContent)
-                response.EnsureSuccessStatusCode()
+                    ' ファイル名に番号が既に割り振られているか確認
+                    Dim fileNameWithoutExtension As String = IO.Path.GetFileNameWithoutExtension(originalFileName)
+                    If IsNumeric(fileNameWithoutExtension) Then
+                        newFileName = fileNameWithoutExtension & ".jpg"
+                    Else
+                        newFileName = i.ToString() & ".jpg" ' 番号を割り振り
+                    End If
+
+                    ' アップロード先のパスを作成
+                    Dim ftpFullPath As String = $"{ftpServer}/{targetFolder}/{filePath1}/{filePath2}/{newFileName}"
+
+                    ' ファイルの内容を読み込み
+                    Dim fileContent As ByteArrayContent
+                    Using fileStream As New IO.FileStream(originalFileName, IO.FileMode.Open, IO.FileAccess.Read)
+                        fileContent = New ByteArrayContent(New IO.BinaryReader(fileStream).ReadBytes(CInt(fileStream.Length)))
+                    End Using
+
+                    ' FTPサーバーにファイルをアップロード
+                    Dim response As HttpResponseMessage = Await client.PutAsync(ftpFullPath, fileContent)
+                    response.EnsureSuccessStatusCode()
+                Next
 
                 MessageBox.Show("ファイルのアップロードが完了しました。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information)
             End Using
