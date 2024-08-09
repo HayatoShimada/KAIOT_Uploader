@@ -112,4 +112,62 @@ Public Class Form1
         End Try
     End Sub
 
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        ' FTPサーバーの情報
+        Dim ftpServer As String = TextBox2.Text
+        Dim ftpUserName As String = TextBox4.Text
+        Dim ftpPassword As String = TextBox5.Text
+        Dim targetFolder As String = TextBox3.Text
+
+        Try
+            ' FTPコマンドを生成
+            Dim ftpCommands As String = String.Join(Environment.NewLine, {
+                $"open {ftpServer}",
+                ftpUserName,
+                ftpPassword,
+                $"cd {targetFolder}",
+                "ls *.jpg",  ' .jpgファイルのみをリスト
+                "bye"
+            })
+
+            ' 一時ファイルにFTPスクリプトを保存
+            Dim tempScriptPath As String = IO.Path.Combine(IO.Path.GetTempPath(), "ftpListScript.txt")
+            IO.File.WriteAllText(tempScriptPath, ftpCommands)
+
+            ' コマンドプロンプトでftpコマンドを実行
+            Dim startInfo As New ProcessStartInfo("cmd.exe") With {
+                .RedirectStandardInput = True,
+                .RedirectStandardOutput = True,
+                .RedirectStandardError = True,
+                .UseShellExecute = False,
+                .CreateNoWindow = True
+            }
+
+            Dim process As Process = Process.Start(startInfo)
+            Using writer As IO.StreamWriter = process.StandardInput
+                If writer.BaseStream.CanWrite Then
+                    writer.WriteLine($"ftp -s:""{tempScriptPath}""")
+                End If
+            End Using
+
+            process.WaitForExit()
+
+            ' 結果を取得
+            Dim output As String = process.StandardOutput.ReadToEnd()
+
+            ' リストボックスをクリアしてから結果を追加
+            ListBox1.Items.Clear()
+            For Each line As String In output.Split(New String() {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
+                If line.EndsWith(".jpg") Then
+                    ListBox1.Items.Add(line)
+                End If
+            Next
+
+            ' 一時ファイルを削除
+            IO.File.Delete(tempScriptPath)
+        Catch ex As Exception
+            MessageBox.Show("エラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
 End Class

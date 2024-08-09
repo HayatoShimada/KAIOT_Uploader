@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="pFTPadd" Type="System.String" Scope="User">
-      <Value Profile="(Default)">ftp://192.168.250.62</Value>
+      <Value Profile="(Default)">192.168.250.62</Value>
     </Setting>
     <Setting Name="pFTPuser" Type="System.String" Scope="User">
       <Value Profile="(Default)">KVIE</Value>

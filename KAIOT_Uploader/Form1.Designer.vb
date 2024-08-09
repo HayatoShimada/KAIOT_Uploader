@@ -40,6 +40,8 @@ Partial Class Form1
         Me.ComboBox1 = New System.Windows.Forms.ComboBox()
         Me.NumericUpDown1 = New System.Windows.Forms.NumericUpDown()
         Me.RichTextBox1 = New System.Windows.Forms.RichTextBox()
+        Me.Button3 = New System.Windows.Forms.Button()
+        Me.ListBox1 = New System.Windows.Forms.ListBox()
         CType(Me.NumericUpDown1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -178,17 +180,37 @@ Partial Class Form1
         '
         'RichTextBox1
         '
-        Me.RichTextBox1.Location = New System.Drawing.Point(12, 250)
+        Me.RichTextBox1.Location = New System.Drawing.Point(12, 367)
         Me.RichTextBox1.Name = "RichTextBox1"
-        Me.RichTextBox1.Size = New System.Drawing.Size(564, 253)
+        Me.RichTextBox1.Size = New System.Drawing.Size(564, 136)
         Me.RichTextBox1.TabIndex = 17
         Me.RichTextBox1.Text = ""
+        '
+        'Button3
+        '
+        Me.Button3.Location = New System.Drawing.Point(475, 179)
+        Me.Button3.Name = "Button3"
+        Me.Button3.Size = New System.Drawing.Size(101, 23)
+        Me.Button3.TabIndex = 18
+        Me.Button3.Text = "画像リスト検索"
+        Me.Button3.UseVisualStyleBackColor = True
+        '
+        'ListBox1
+        '
+        Me.ListBox1.FormattingEnabled = True
+        Me.ListBox1.ItemHeight = 15
+        Me.ListBox1.Location = New System.Drawing.Point(12, 237)
+        Me.ListBox1.Name = "ListBox1"
+        Me.ListBox1.Size = New System.Drawing.Size(564, 109)
+        Me.ListBox1.TabIndex = 19
         '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(592, 528)
+        Me.Controls.Add(Me.ListBox1)
+        Me.Controls.Add(Me.Button3)
         Me.Controls.Add(Me.RichTextBox1)
         Me.Controls.Add(Me.NumericUpDown1)
         Me.Controls.Add(Me.ComboBox1)
@@ -232,4 +254,6 @@ Partial Class Form1
     Friend WithEvents ComboBox1 As ComboBox
     Friend WithEvents NumericUpDown1 As NumericUpDown
     Friend WithEvents RichTextBox1 As RichTextBox
+    Friend WithEvents Button3 As Button
+    Friend WithEvents ListBox1 As ListBox
 End Class

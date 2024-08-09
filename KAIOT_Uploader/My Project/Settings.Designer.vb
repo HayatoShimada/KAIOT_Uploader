@@ -56,7 +56,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("ftp://192.168.250.62")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("192.168.250.62")>  _
         Public Property pFTPadd() As String
             Get
                 Return CType(Me("pFTPadd"),String)
