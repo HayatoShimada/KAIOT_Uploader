@@ -89,9 +89,11 @@ Public Class Form1
     ' FTPサーバーに指定したファイルが存在するか確認する関数
     Private Async Function FileExistsOnFtp(ftpFullPath As String, ftpUserName As String, ftpPassword As String) As Task(Of Boolean)
         Try
-            Dim request = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
+            Dim request As System.Net.FtpWebRequest = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
             request.Credentials = New NetworkCredential(ftpUserName, ftpPassword)
             request.Method = WebRequestMethods.Ftp.GetFileSize
+            request.UseBinary = False
+            request.UsePassive = False
 
             Using response = CType(Await request.GetResponseAsync(), FtpWebResponse)
                 Return response.StatusCode = FtpStatusCode.FileStatus
@@ -110,6 +112,8 @@ Public Class Form1
         Dim request = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
         request.Credentials = New NetworkCredential(ftpUserName, ftpPassword)
         request.Method = WebRequestMethods.Ftp.UploadFile
+        request.UseBinary = False
+        request.UsePassive = False
 
         ' ファイルの内容を読み込んでアップロード
         Using fileStream As New IO.FileStream(localFilePath, IO.FileMode.Open, IO.FileAccess.Read)
