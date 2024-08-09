@@ -1,4 +1,5 @@
 ﻿Imports System.Diagnostics
+Imports System.Net
 
 Public Class Form1
 
@@ -186,4 +187,64 @@ Public Class Form1
         End Try
     End Sub
 
+    Private Sub ListBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged
+        ' 選択された画像ファイルを取得
+        Dim selectedFile As String = ListBox1.SelectedItem.ToString()
+
+        ' FTPサーバーの情報
+        Dim ftpServer As String = TextBox2.Text
+        Dim ftpUserName As String = TextBox4.Text
+        Dim ftpPassword As String = TextBox5.Text
+        Dim targetFolder As String = TextBox3.Text
+
+        Dim filePath1 As String = NumericUpDown1.Value.ToString()
+        Dim filePath2 As String = "0"
+
+        ' ComboBox1 の選択に応じて filePath2 の値を設定
+        Select Case ComboBox1.Text
+            Case "型替"
+                filePath2 = "0"
+            Case "造型"
+                filePath2 = "1"
+            Case "中子"
+                filePath2 = "2"
+            Case "注湯"
+                filePath2 = "3"
+            Case "解枠"
+                filePath2 = "4"
+        End Select
+
+
+        ' FTPから画像をダウンロード
+        Dim ftpFullPath As String = $"ftp://{ftpServer}/{targetFolder}/{selectedFile}/{filePath1}/{filePath2}"
+        Dim localTempFile As String = IO.Path.Combine(IO.Path.GetTempPath(), selectedFile)
+
+        Try
+            Dim request As FtpWebRequest = CType(WebRequest.Create(ftpFullPath), FtpWebRequest)
+            request.Credentials = New NetworkCredential(ftpUserName, ftpPassword)
+            request.Method = WebRequestMethods.Ftp.DownloadFile
+
+            Using response As FtpWebResponse = CType(request.GetResponse(), FtpWebResponse)
+                Using responseStream As IO.Stream = response.GetResponseStream()
+                    Using fileStream As New IO.FileStream(localTempFile, IO.FileMode.Create)
+                        responseStream.CopyTo(fileStream)
+                    End Using
+                End Using
+            End Using
+
+            ' ダウンロードした画像をPictureBoxに表示
+            PictureBox1.Image = Image.FromFile(localTempFile)
+
+        Catch ex As Exception
+            MessageBox.Show("画像のダウンロード中にエラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs) Handles TextBox1.TextChanged
+
+    End Sub
+
+    Private Sub Label1_Click(sender As Object, e As EventArgs) Handles Label1.Click
+
+    End Sub
 End Class
