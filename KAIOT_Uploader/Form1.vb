@@ -4,6 +4,7 @@ Imports System.Net
 Public Class Form1
 
     Public imageFiles As String()
+    Private temporaryFiles As New List(Of String)() ' ダウンロードしたファイルのパスを保持するリスト
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         TextBox2.Text = My.Settings.pFTPadd
@@ -217,33 +218,32 @@ Public Class Form1
                 filePath2 = "4"
         End Select
 
-        ' ローカルにダウンロードするパスを設定
-        Dim localTempFile As String = IO.Path.Combine(IO.Path.GetTempPath(), selectedFile)
-        ' 一意のスクリプトファイル名を生成
-        Dim tempScriptPath As String = IO.Path.Combine(IO.Path.GetTempPath(), $"ftpDownloadScript_{Guid.NewGuid().ToString()}.txt")
+        ' ローカルにダウンロードするパスをプロジェクトのルートディレクトリに設定
+        Dim localTempFile As String = IO.Path.Combine(Application.StartupPath, selectedFile)
 
         Try
             ' FTPスクリプトを生成
             Dim ftpCommands As String = String.Join(Environment.NewLine, {
-            $"open {ftpServer}",
-            ftpUserName,
-            ftpPassword,
-            $"cd {targetFolder}/{filePath1}/{filePath2}",
-            $"get {selectedFile} {localTempFile}", ' ファイルをダウンロード
-            "bye"
-        })
+                $"open {ftpServer}",
+                ftpUserName,
+                ftpPassword,
+                $"cd {targetFolder}/{filePath1}/{filePath2}",
+                $"get {selectedFile} {localTempFile}", ' ファイルをダウンロード
+                "bye"
+            })
 
             ' 一時ファイルにFTPスクリプトを保存
+            Dim tempScriptPath As String = IO.Path.Combine(IO.Path.GetTempPath(), "ftpDownloadScript.txt")
             IO.File.WriteAllText(tempScriptPath, ftpCommands)
 
             ' コマンドプロンプトでftpコマンドを実行
             Dim startInfo As New ProcessStartInfo("cmd.exe") With {
-            .RedirectStandardInput = True,
-            .RedirectStandardOutput = True,
-            .RedirectStandardError = True,
-            .UseShellExecute = False,
-            .CreateNoWindow = True
-        }
+                .RedirectStandardInput = True,
+                .RedirectStandardOutput = True,
+                .RedirectStandardError = True,
+                .UseShellExecute = False,
+                .CreateNoWindow = True
+            }
 
             Dim process As Process = Process.Start(startInfo)
             Using writer As IO.StreamWriter = process.StandardInput
@@ -260,21 +260,27 @@ Public Class Form1
             ' ダウンロードした画像をPictureBoxに表示
             PictureBox1.Image = Image.FromFile(localTempFile)
 
+            ' ダウンロードしたファイルのパスをリストに追加
+            temporaryFiles.Add(localTempFile)
+
         Catch ex As Exception
             MessageBox.Show("画像のダウンロード中にエラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
-            ' 一時ファイルを削除
-            If IO.File.Exists(tempScriptPath) Then
-                IO.File.Delete(tempScriptPath)
-            End If
+
         End Try
     End Sub
 
-    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs) Handles TextBox1.TextChanged
-
+    ' フォームが閉じられるときに一時ファイルを削除する
+    Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+        For Each file In temporaryFiles
+            If IO.File.Exists(file) Then
+                Try
+                    IO.File.Delete(file)
+                Catch ex As Exception
+                    ' ファイル削除に失敗した場合の処理（ログなどに記録しておくとよい）
+                End Try
+            End If
+        Next
     End Sub
 
-    Private Sub Label1_Click(sender As Object, e As EventArgs) Handles Label1.Click
-
-    End Sub
 End Class
