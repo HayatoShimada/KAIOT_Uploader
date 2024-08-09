@@ -72,6 +72,17 @@ Public Class Form1
                     ' アップロード先のパスを作成
                     Dim ftpFullPath As String = $"{ftpServer}/{targetFolder}/{filePath1}/{filePath2}/{newFileName}"
 
+                    ' 既存のファイルがあるかチェック
+                    If Await FileExistsOnFtp(client, ftpFullPath) Then
+                        Dim result = MessageBox.Show($"ファイル {newFileName} は既に存在します。上書きしますか？", "確認", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning)
+                        If result = DialogResult.Cancel Then
+                            Exit For
+                        ElseIf result = DialogResult.No Then
+                            Continue For ' 次のファイルへ
+                        End If
+                        ' Yesの場合は上書き処理を続ける
+                    End If
+
                     ' ファイルの内容を読み込み
                     Dim fileContent As ByteArrayContent
                     Using fileStream As New IO.FileStream(originalFileName, IO.FileMode.Open, IO.FileAccess.Read)
@@ -89,5 +100,16 @@ Public Class Form1
             MessageBox.Show("エラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    ' FTPサーバーに指定したファイルが存在するか確認する関数
+    Private Async Function FileExistsOnFtp(client As HttpClient, ftpFullPath As String) As Task(Of Boolean)
+        Try
+            Dim request = New HttpRequestMessage(HttpMethod.Head, ftpFullPath)
+            Dim response = Await client.SendAsync(request)
+            Return response.IsSuccessStatusCode
+        Catch ex As Exception
+            Return False
+        End Try
+    End Function
 
 End Class
