@@ -217,33 +217,33 @@ Public Class Form1
                 filePath2 = "4"
         End Select
 
-
         ' ローカルにダウンロードするパスを設定
         Dim localTempFile As String = IO.Path.Combine(IO.Path.GetTempPath(), selectedFile)
+        ' 一意のスクリプトファイル名を生成
+        Dim tempScriptPath As String = IO.Path.Combine(IO.Path.GetTempPath(), $"ftpDownloadScript_{Guid.NewGuid().ToString()}.txt")
 
         Try
             ' FTPスクリプトを生成
             Dim ftpCommands As String = String.Join(Environment.NewLine, {
-                $"open {ftpServer}",
-                ftpUserName,
-                ftpPassword,
-                $"cd {targetFolder}/{filePath1}/{filePath2}",
-                $"get {selectedFile} {localTempFile}", ' ファイルをダウンロード
-                "bye"
-            })
+            $"open {ftpServer}",
+            ftpUserName,
+            ftpPassword,
+            $"cd {targetFolder}/{filePath1}/{filePath2}",
+            $"get {selectedFile} {localTempFile}", ' ファイルをダウンロード
+            "bye"
+        })
 
             ' 一時ファイルにFTPスクリプトを保存
-            Dim tempScriptPath As String = IO.Path.Combine(IO.Path.GetTempPath(), "ftpDownloadScript.txt")
             IO.File.WriteAllText(tempScriptPath, ftpCommands)
 
             ' コマンドプロンプトでftpコマンドを実行
             Dim startInfo As New ProcessStartInfo("cmd.exe") With {
-                .RedirectStandardInput = True,
-                .RedirectStandardOutput = True,
-                .RedirectStandardError = True,
-                .UseShellExecute = False,
-                .CreateNoWindow = True
-            }
+            .RedirectStandardInput = True,
+            .RedirectStandardOutput = True,
+            .RedirectStandardError = True,
+            .UseShellExecute = False,
+            .CreateNoWindow = True
+        }
 
             Dim process As Process = Process.Start(startInfo)
             Using writer As IO.StreamWriter = process.StandardInput
@@ -262,6 +262,11 @@ Public Class Form1
 
         Catch ex As Exception
             MessageBox.Show("画像のダウンロード中にエラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            ' 一時ファイルを削除
+            If IO.File.Exists(tempScriptPath) Then
+                IO.File.Delete(tempScriptPath)
+            End If
         End Try
     End Sub
 
