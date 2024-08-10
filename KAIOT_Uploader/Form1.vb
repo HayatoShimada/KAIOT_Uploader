@@ -52,6 +52,7 @@ Public Class Form1
     ' フォームが閉じられるときに一時ファイルを削除する
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         CashDelete()
+
     End Sub
 
 
@@ -290,7 +291,6 @@ Public Class Form1
         End Try
     End Sub
 
-    ' 画像のプレビュー機能
     ' 画像のプレビュー機能
     Private Sub ListBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged
 
