@@ -177,7 +177,10 @@ Public Class Form1
             ListBox1.Items.Clear()
             For Each line As String In output.Split(New String() {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
                 If line.EndsWith(".jpg") Then
-                    ListBox1.Items.Add(line)
+                    If Not line.StartsWith("ls") Then
+                        ListBox1.Items.Add(line)
+
+                    End If
                 End If
             Next
 
@@ -261,15 +264,16 @@ Public Class Form1
 
             ' cmdの結果をリッチテキストに表示
             RichTextBox1.AppendText(output & Environment.NewLine)
+            ' ダウンロードしたファイルのパスをリストに追加後から消す為
+            temporaryFiles.Add(localTempFile)
 
             ' ダウンロードした画像をPictureBoxに表示
             PictureBox1.Image = Image.FromFile(localTempFile)
 
             ' ダウンロードした画像をフォトアプリで表示
-            Process.Start(localTempFile)
+            ' Process.Start(New ProcessStartInfo(localTempFile) With {.UseShellExecute = True})
 
-            ' ダウンロードしたファイルのパスをリストに追加後から消す為
-            temporaryFiles.Add(localTempFile)
+
 
         Catch ex As Exception
             MessageBox.Show("画像のダウンロード中にエラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -279,7 +283,7 @@ Public Class Form1
     End Sub
 
     ' フォームが閉じられるときに一時ファイルを削除する
-    Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+    Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         For Each file In temporaryFiles
             If IO.File.Exists(file) Then
                 Try
@@ -291,4 +295,7 @@ Public Class Form1
         Next
     End Sub
 
+    Private Sub PictureBox1_Click(sender As Object, e As EventArgs) Handles PictureBox1.Click
+
+    End Sub
 End Class
