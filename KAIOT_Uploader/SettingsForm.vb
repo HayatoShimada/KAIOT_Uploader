@@ -59,7 +59,11 @@ Public Class SettingsForm
             Dim output As String = process.StandardOutput.ReadToEnd()
 
             ' 成功メッセージを検索
-            If output.Contains("230 User logged in") Then
+            If output.Contains("無効です") Then
+                MessageBox.Show("FTPサーバーへの接続に失敗しました。", "通信確認", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+
+
+            Else
                 MessageBox.Show("FTPサーバーに正常に接続できました。", "通信確認", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 ' 入力されたFTP設定を保存
                 My.Settings.pFTPadd = TextBoxIp.Text
@@ -70,8 +74,6 @@ Public Class SettingsForm
                 ' OKボタンを押すとダイアログを閉じる
                 Me.DialogResult = DialogResult.OK
                 Me.Close()
-            Else
-                MessageBox.Show("FTPサーバーへの接続に失敗しました。", "通信確認", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             End If
 
             ' 一時ファイルを削除

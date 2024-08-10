@@ -6,10 +6,14 @@ Public Class Form1
     Private temporaryFiles As New List(Of String)() ' ダウンロードしたファイルのパスを保持するリスト
 
     Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox1.SelectedIndexChanged
+        CashDelete()
+
         ListUpdate()
     End Sub
 
     Private Sub NumericUpDown1_ValueChanged(sender As Object, e As EventArgs) Handles NumericUpDown1.ValueChanged
+        CashDelete()
+
         ListUpdate()
 
     End Sub
