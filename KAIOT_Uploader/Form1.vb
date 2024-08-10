@@ -191,10 +191,10 @@ Public Class Form1
         End Try
     End Sub
 
+    ' 画像のプレビュー機能
     Private Sub ListBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged
         ' 選択された画像ファイルを取得
         Dim selectedFile As String = ListBox1.SelectedItem.ToString()
-
 
         ' FTPサーバーの情報
         Dim ftpServer As String = TextBox2.Text
@@ -204,8 +204,6 @@ Public Class Form1
 
         Dim filePath1 As String = NumericUpDown1.Value.ToString()
         Dim filePath2 As String = "0"
-
-
 
         ' ComboBox1 の選択に応じて filePath2 の値を設定
         Select Case ComboBox1.Text
@@ -261,12 +259,16 @@ Public Class Form1
             process.WaitForExit()
             Dim output As String = process.StandardOutput.ReadToEnd()
 
+            ' cmdの結果をリッチテキストに表示
             RichTextBox1.AppendText(output & Environment.NewLine)
 
             ' ダウンロードした画像をPictureBoxに表示
             PictureBox1.Image = Image.FromFile(localTempFile)
 
-            ' ダウンロードしたファイルのパスをリストに追加
+            ' ダウンロードした画像をフォトアプリで表示
+            Process.Start(localTempFile)
+
+            ' ダウンロードしたファイルのパスをリストに追加後から消す為
             temporaryFiles.Add(localTempFile)
 
         Catch ex As Exception
