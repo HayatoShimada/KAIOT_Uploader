@@ -15,10 +15,24 @@ Public Class Form1
     End Sub
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+
+        ' 通信設定フォームをモーダルで表示
+        Dim settingsForm As New SettingsForm()
+
+        ' モーダル表示のため、ユーザーが設定を完了するまでメインフォームが表示されない
+        If settingsForm.ShowDialog() = DialogResult.OK Then
+
+        Else
+            ' キャンセルされた場合、アプリケーションを終了
+            Me.Close()
+        End If
+
         TextBox2.Text = My.Settings.pFTPadd
         TextBox3.Text = My.Settings.pFTPfolder
         TextBox4.Text = My.Settings.pFTPuser
         TextBox5.Text = My.Settings.pFTPpass
+
     End Sub
 
 
@@ -28,9 +42,7 @@ Public Class Form1
             PictureBox1.Image = Nothing
 
         End If
-
         temporaryFiles.Clear()
-
 
     End Sub
     ' フォームが閉じられるときに一時ファイルを削除する
