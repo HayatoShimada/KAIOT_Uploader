@@ -19,20 +19,23 @@ Public Class Form1
         TextBox3.Text = My.Settings.pFTPfolder
         TextBox4.Text = My.Settings.pFTPuser
         TextBox5.Text = My.Settings.pFTPpass
-        ComboBox1.SelectedIndex = 0
     End Sub
 
+
+    Private Sub CashDelete()
+        If PictureBox1.Image IsNot Nothing Then
+            PictureBox1.Image.Dispose()
+            PictureBox1.Image = Nothing
+
+        End If
+
+        temporaryFiles.Clear()
+
+
+    End Sub
     ' フォームが閉じられるときに一時ファイルを削除する
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
-        For Each file In temporaryFiles
-            If IO.File.Exists(file) Then
-                Try
-                    IO.File.Delete(file)
-                Catch ex As Exception
-                    ' ファイル削除に失敗した場合の処理（ログなどに記録しておくとよい）
-                End Try
-            End If
-        Next
+        CashDelete()
     End Sub
 
 
@@ -90,7 +93,7 @@ Public Class Form1
                 Dim itemMaxNum As Integer
 
                 ' ListBox1のアイテムから追加する画像の名前を決定する。
-                If Not ListBox1.Items.Count = 0 Then
+                If ListBox1.Items.Count = 0 Then
                     itemMaxNum = 0
 
                 ElseIf ListBox1.Items.Count = 1 Then
@@ -157,12 +160,11 @@ Public Class Form1
                 Dim output As String = process.StandardOutput.ReadToEnd()
                 RichTextBox1.AppendText(output & Environment.NewLine)
 
-                ' 一時ファイルを削除
-                IO.File.Delete(tempScriptPath)
 
                 ListUpdate()
 
             Next
+            CashDelete()
 
 
             MessageBox.Show("ファイルのアップロードが完了しました。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -205,7 +207,6 @@ Public Class Form1
 
         Dim selectedFile As String = ListBox1.SelectedItem.ToString()
 
-        ListUpdate()
 
         Using ofd_IO As New OpenFileDialog
             With ofd_IO
@@ -234,6 +235,7 @@ Public Class Form1
                 $"open {ftpServer}",
                 ftpUserName,
                 ftpPassword,
+                $"delete ""{remoteFilePath}""",
                 $"put ""{localFileSingle}"" ""{remoteFilePath}""",
                 "bye"
             })
@@ -264,13 +266,8 @@ Public Class Form1
             Dim output As String = process.StandardOutput.ReadToEnd()
             RichTextBox1.AppendText(output & Environment.NewLine)
 
-            ' 一時ファイルを削除
-            IO.File.Delete(tempScriptPath)
-
             ListUpdate()
-
-
-
+            CashDelete()
             MessageBox.Show("ファイルのアップロードが完了しました。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
             MessageBox.Show("エラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -278,9 +275,10 @@ Public Class Form1
     End Sub
 
     ' 画像のプレビュー機能
+    ' 画像のプレビュー機能
     Private Sub ListBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged
 
-        If ListBox1.SelectedItems Is Nothing Then
+        If ListBox1.SelectedItem Is Nothing Then
             Exit Sub
         End If
 
@@ -313,19 +311,19 @@ Public Class Form1
         ' selectedFileはフルパスなので、画像名だけに絞る
         selectedFile = selectedFile.Replace($"/{targetFolder}/{filePath1}/{filePath2}/", "")
 
-        ' ローカルにダウンロードするパスをプロジェクトのルートディレクトリに設定
-        Dim localTempFile As String = IO.Path.Combine(Application.StartupPath, selectedFile)
+        ' 一時ファイルのパスを生成
+        Dim localTempFile As String = IO.Path.Combine(IO.Path.GetTempPath(), selectedFile)
 
         Try
             ' FTPスクリプトを生成
             Dim ftpCommands As String = String.Join(Environment.NewLine, {
-                $"open {ftpServer}",
-                ftpUserName,
-                ftpPassword,
-                $"cd {targetFolder}/{filePath1}/{filePath2}",
-                $"get {selectedFile} {localTempFile}", ' ファイルをダウンロード
-                "bye"
-            })
+            $"open {ftpServer}",
+            ftpUserName,
+            ftpPassword,
+            $"cd {targetFolder}/{filePath1}/{filePath2}",
+            $"get {selectedFile} {localTempFile}", ' ファイルをダウンロード
+            "bye"
+        })
 
             ' 一時ファイルにFTPスクリプトを保存
             Dim tempScriptPath As String = IO.Path.Combine(IO.Path.GetTempPath(), "ftpDownloadScript.txt")
@@ -333,12 +331,12 @@ Public Class Form1
 
             ' コマンドプロンプトでftpコマンドを実行
             Dim startInfo As New ProcessStartInfo("cmd.exe") With {
-                .RedirectStandardInput = True,
-                .RedirectStandardOutput = True,
-                .RedirectStandardError = True,
-                .UseShellExecute = False,
-                .CreateNoWindow = True
-            }
+            .RedirectStandardInput = True,
+            .RedirectStandardOutput = True,
+            .RedirectStandardError = True,
+            .UseShellExecute = False,
+            .CreateNoWindow = True
+        }
 
             Dim process As Process = Process.Start(startInfo)
             Using writer As IO.StreamWriter = process.StandardInput
@@ -352,23 +350,23 @@ Public Class Form1
 
             ' cmdの結果をリッチテキストに表示
             RichTextBox1.AppendText(output & Environment.NewLine)
-            ' ダウンロードしたファイルのパスをリストに追加後から消す為
+            ' ダウンロードしたファイルのパスをリストに追加して後で削除する
             temporaryFiles.Add(localTempFile)
+
+            ' 以前の画像を解放してから新しい画像を表示
+            If PictureBox1.Image IsNot Nothing Then
+                PictureBox1.Image.Dispose()
+                PictureBox1.Image = Nothing
+            End If
 
             ' ダウンロードした画像をPictureBoxに表示
             PictureBox1.Image = Image.FromFile(localTempFile)
 
-            ' ダウンロードした画像をフォトアプリで表示
-            ' Process.Start(New ProcessStartInfo(localTempFile) With {.UseShellExecute = True})
-
-
-
         Catch ex As Exception
             MessageBox.Show("画像のダウンロード中にエラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        Finally
-
         End Try
     End Sub
+
 
     ' 画像の削除処理
     Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
@@ -426,14 +424,10 @@ Public Class Form1
             Dim output As String = process.StandardOutput.ReadToEnd()
             RichTextBox1.AppendText(output & Environment.NewLine)
 
-            ' 一時ファイルを削除
-            IO.File.Delete(tempScriptPath)
 
             ListUpdate()
 
-
-
-            MessageBox.Show("ファイルのアップロードが完了しました。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            MessageBox.Show("ファイルを削除しました。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
             MessageBox.Show("エラーが発生しました: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -523,4 +517,7 @@ Public Class Form1
 
     End Sub
 
+    Private Sub PictureBox1_Click(sender As Object, e As EventArgs) Handles PictureBox1.Click
+
+    End Sub
 End Class
