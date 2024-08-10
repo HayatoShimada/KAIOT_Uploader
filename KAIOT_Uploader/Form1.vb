@@ -195,6 +195,7 @@ Public Class Form1
         ' 選択された画像ファイルを取得
         Dim selectedFile As String = ListBox1.SelectedItem.ToString()
 
+
         ' FTPサーバーの情報
         Dim ftpServer As String = TextBox2.Text
         Dim ftpUserName As String = TextBox4.Text
@@ -203,6 +204,8 @@ Public Class Form1
 
         Dim filePath1 As String = NumericUpDown1.Value.ToString()
         Dim filePath2 As String = "0"
+
+
 
         ' ComboBox1 の選択に応じて filePath2 の値を設定
         Select Case ComboBox1.Text
@@ -217,6 +220,9 @@ Public Class Form1
             Case "解枠"
                 filePath2 = "4"
         End Select
+
+        ' selectedFileはフルパスなので、画像名だけに絞る
+        selectedFile = selectedFile.Replace($"{targetFolder}/{filePath1}/{filePath2}/", "")
 
         ' ローカルにダウンロードするパスをプロジェクトのルートディレクトリに設定
         Dim localTempFile As String = IO.Path.Combine(Application.StartupPath, selectedFile)
