@@ -373,28 +373,8 @@ Public Class Form1
     ' 画像の削除処理
     Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
         Dim ftpServer As String = TextBox2.Text
-        Dim targetFolder As String = TextBox3.Text
-        Dim filePath1 As String = NumericUpDown1.Value.ToString()
-        Dim filePath2 As String = "0"
-        Dim imageFiles As String()
-
-        ' ComboBox1 の選択に応じて filePath2 の値を設定
-        Select Case ComboBox1.Text
-            Case "型替"
-                filePath2 = "0"
-            Case "造型"
-                filePath2 = "1"
-            Case "中子"
-                filePath2 = "2"
-            Case "注湯"
-                filePath2 = "3"
-            Case "解枠"
-                filePath2 = "4"
-        End Select
-
         Dim ftpUserName As String = TextBox4.Text
         Dim ftpPassword As String = TextBox5.Text
-
 
         If ListBox1.SelectedItem Is Nothing Then
             MsgBox("画像を選択してください")
