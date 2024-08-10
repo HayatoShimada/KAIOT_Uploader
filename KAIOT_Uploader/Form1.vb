@@ -222,7 +222,7 @@ Public Class Form1
         End Select
 
         ' selectedFileはフルパスなので、画像名だけに絞る
-        selectedFile = selectedFile.Replace($"{targetFolder}/{filePath1}/{filePath2}/", "")
+        selectedFile = selectedFile.Replace($"/{targetFolder}/{filePath1}/{filePath2}/", "")
 
         ' ローカルにダウンロードするパスをプロジェクトのルートディレクトリに設定
         Dim localTempFile As String = IO.Path.Combine(Application.StartupPath, selectedFile)
