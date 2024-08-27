@@ -1,7 +1,4 @@
-﻿Imports System.Diagnostics
-Imports System.Net
-
-Public Class Form1
+﻿Public Class Form1
 
     Private temporaryFiles As New List(Of String)() ' ダウンロードしたファイルのパスを保持するリスト
 
@@ -62,17 +59,16 @@ Public Class Form1
 
     End Sub
 
+    Private Function ComboBoxSelecter()
+        Dim filePath2 As String = ""
 
-    ' 画像の追加処理
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        Dim ftpServer As String = TextBox2.Text
-        Dim targetFolder As String = TextBox3.Text
-        Dim filePath1 As String = NumericUpDown1.Value.ToString()
-        Dim filePath2 As String = "0"
-        Dim localFileMulti As String
-        Dim imageFiles As String()
+        ' ComboBox1, 2の選択に応じて filePath2 の値を設定
+        If ComboBox1.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Return filePath2 = "err"
 
-        ' ComboBox1 の選択に応じて filePath2 の値を設定
+        End If
+
         Select Case ComboBox1.Text
             Case "型替"
                 filePath2 = "0"
@@ -86,6 +82,12 @@ Public Class Form1
                 filePath2 = "4"
         End Select
 
+        If ComboBox2.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Return filePath2 = "err"
+
+        End If
+
         Select Case ComboBox2.Text
             Case "指定なし"
                 filePath2 = filePath2 & "/U"
@@ -95,10 +97,28 @@ Public Class Form1
                 filePath2 = filePath2 & "/D"
         End Select
 
+        Return filePath2
+
+    End Function
+
+    ' 画像の追加処理
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        Dim ftpServer As String = TextBox2.Text
+        Dim targetFolder As String = TextBox3.Text
+        Dim filePath1 As String = NumericUpDown1.Value.ToString()
+        Dim filePath2 As String
+        Dim localFileMulti As String
+        Dim imageFiles As String()
+
+        filePath2 = ComboBoxSelecter()
+
+        If filePath2 = "err" Then
+            Exit Sub
+
+        End If
 
         Dim ftpUserName As String = TextBox4.Text
         Dim ftpPassword As String = TextBox5.Text
-
 
         ListUpdate()
 
@@ -212,44 +232,16 @@ Public Class Form1
         Dim ftpServer As String = TextBox2.Text
         Dim targetFolder As String = TextBox3.Text
         Dim filePath1 As String = NumericUpDown1.Value.ToString()
-        Dim filePath2 As String = "0"
+        Dim filePath2 As String
         Dim imageFiles As String()
         Dim localFileSingle As String
 
-        ' ComboBox1, 2の選択に応じて filePath2 の値を設定
-        If ComboBox1.SelectedItem Is Nothing Then
-            MsgBox("画像種別を選択してください")
+        filePath2 = ComboBoxSelecter()
+
+        If filePath2 = "err" Then
             Exit Sub
 
         End If
-
-        Select Case ComboBox1.Text
-            Case "型替"
-                filePath2 = "0"
-            Case "造型"
-                filePath2 = "1"
-            Case "中子"
-                filePath2 = "2"
-            Case "注湯"
-                filePath2 = "3"
-            Case "解枠"
-                filePath2 = "4"
-        End Select
-
-        If ComboBox2.SelectedItem Is Nothing Then
-            MsgBox("画像種別を選択してください")
-            Exit Sub
-
-        End If
-
-        Select Case ComboBox2.Text
-            Case "指定なし"
-                filePath2 = filePath2 & "/U"
-            Case "上型"
-                filePath2 = filePath2 & "/U"
-            Case "下型"
-                filePath2 = filePath2 & "/D"
-        End Select
 
         Dim ftpUserName As String = TextBox4.Text
         Dim ftpPassword As String = TextBox5.Text
@@ -346,45 +338,11 @@ Public Class Form1
         Dim targetFolder As String = TextBox3.Text
 
         Dim filePath1 As String = NumericUpDown1.Value.ToString()
-        Dim filePath2 As String = "0"
+        Dim filePath2 As String
 
-        ' ComboBox1, 2の選択に応じて filePath2 の値を設定
-        If ComboBox1.SelectedItem Is Nothing Then
-            MsgBox("画像種別を選択してください")
-            Exit Sub
+        filePath2 = ComboBoxSelecter()
 
-        End If
-
-        Select Case ComboBox1.Text
-            Case "型替"
-                filePath2 = "0"
-            Case "造型"
-                filePath2 = "1"
-            Case "中子"
-                filePath2 = "2"
-            Case "注湯"
-                filePath2 = "3"
-            Case "解枠"
-                filePath2 = "4"
-        End Select
-
-        If ComboBox2.SelectedItem Is Nothing Then
-            MsgBox("画像種別を選択してください")
-            Exit Sub
-
-        End If
-
-        Select Case ComboBox2.Text
-            Case "指定なし"
-                filePath2 = filePath2 & "/U"
-            Case "上型"
-                filePath2 = filePath2 & "/U"
-            Case "下型"
-                filePath2 = filePath2 & "/D"
-        End Select
-
-        If ComboBox2.SelectedItem Is Nothing Then
-            MsgBox("画像種別を選択してください")
+        If filePath2 = "err" Then
             Exit Sub
 
         End If
@@ -524,42 +482,14 @@ Public Class Form1
         Dim ftpPassword As String = TextBox5.Text
         Dim targetFolder As String = TextBox3.Text
         Dim filePath1 As String = NumericUpDown1.Value.ToString()
-        Dim filePath2 As String = "0"
+        Dim filePath2 As String
 
-        ' ComboBox1, 2の選択に応じて filePath2 の値を設定
-        If ComboBox1.SelectedItem Is Nothing Then
-            MsgBox("画像種別を選択してください")
+        filePath2 = ComboBoxSelecter()
+
+        If filePath2 = "err" Then
             Exit Sub
 
         End If
-
-        Select Case ComboBox1.Text
-            Case "型替"
-                filePath2 = "0"
-            Case "造型"
-                filePath2 = "1"
-            Case "中子"
-                filePath2 = "2"
-            Case "注湯"
-                filePath2 = "3"
-            Case "解枠"
-                filePath2 = "4"
-        End Select
-
-        If ComboBox2.SelectedItem Is Nothing Then
-            MsgBox("画像種別を選択してください")
-            Exit Sub
-
-        End If
-
-        Select Case ComboBox2.Text
-            Case "指定なし"
-                filePath2 = filePath2 & "/U"
-            Case "上型"
-                filePath2 = filePath2 & "/U"
-            Case "下型"
-                filePath2 = filePath2 & "/D"
-        End Select
 
         Try
             ' FTPコマンドを生成
