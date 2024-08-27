@@ -18,6 +18,13 @@ Public Class Form1
 
     End Sub
 
+    Private Sub ComboBox2_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox2.SelectedIndexChanged
+        CashDelete()
+
+        ListUpdate()
+
+    End Sub
+
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
@@ -78,6 +85,16 @@ Public Class Form1
             Case "解枠"
                 filePath2 = "4"
         End Select
+
+        Select Case ComboBox2.Text
+            Case "指定なし"
+                filePath2 = filePath2 & "/U"
+            Case "上型"
+                filePath2 = filePath2 & "/U"
+            Case "下型"
+                filePath2 = filePath2 & "/D"
+        End Select
+
 
         Dim ftpUserName As String = TextBox4.Text
         Dim ftpPassword As String = TextBox5.Text
@@ -199,7 +216,13 @@ Public Class Form1
         Dim imageFiles As String()
         Dim localFileSingle As String
 
-        ' ComboBox1 の選択に応じて filePath2 の値を設定
+        ' ComboBox1, 2の選択に応じて filePath2 の値を設定
+        If ComboBox1.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Exit Sub
+
+        End If
+
         Select Case ComboBox1.Text
             Case "型替"
                 filePath2 = "0"
@@ -211,6 +234,21 @@ Public Class Form1
                 filePath2 = "3"
             Case "解枠"
                 filePath2 = "4"
+        End Select
+
+        If ComboBox2.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Exit Sub
+
+        End If
+
+        Select Case ComboBox2.Text
+            Case "指定なし"
+                filePath2 = filePath2 & "/U"
+            Case "上型"
+                filePath2 = filePath2 & "/U"
+            Case "下型"
+                filePath2 = filePath2 & "/D"
         End Select
 
         Dim ftpUserName As String = TextBox4.Text
@@ -310,7 +348,13 @@ Public Class Form1
         Dim filePath1 As String = NumericUpDown1.Value.ToString()
         Dim filePath2 As String = "0"
 
-        ' ComboBox1 の選択に応じて filePath2 の値を設定
+        ' ComboBox1, 2の選択に応じて filePath2 の値を設定
+        If ComboBox1.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Exit Sub
+
+        End If
+
         Select Case ComboBox1.Text
             Case "型替"
                 filePath2 = "0"
@@ -323,6 +367,27 @@ Public Class Form1
             Case "解枠"
                 filePath2 = "4"
         End Select
+
+        If ComboBox2.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Exit Sub
+
+        End If
+
+        Select Case ComboBox2.Text
+            Case "指定なし"
+                filePath2 = filePath2 & "/U"
+            Case "上型"
+                filePath2 = filePath2 & "/U"
+            Case "下型"
+                filePath2 = filePath2 & "/D"
+        End Select
+
+        If ComboBox2.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Exit Sub
+
+        End If
 
         ' selectedFileはフルパスなので、画像名だけに絞る
         selectedFile = selectedFile.Replace($"/{targetFolder}/{filePath1}/{filePath2}/", "")
@@ -461,7 +526,13 @@ Public Class Form1
         Dim filePath1 As String = NumericUpDown1.Value.ToString()
         Dim filePath2 As String = "0"
 
-        ' ComboBox1 の選択に応じて filePath2 の値を設定
+        ' ComboBox1, 2の選択に応じて filePath2 の値を設定
+        If ComboBox1.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Exit Sub
+
+        End If
+
         Select Case ComboBox1.Text
             Case "型替"
                 filePath2 = "0"
@@ -473,6 +544,21 @@ Public Class Form1
                 filePath2 = "3"
             Case "解枠"
                 filePath2 = "4"
+        End Select
+
+        If ComboBox2.SelectedItem Is Nothing Then
+            MsgBox("画像種別を選択してください")
+            Exit Sub
+
+        End If
+
+        Select Case ComboBox2.Text
+            Case "指定なし"
+                filePath2 = filePath2 & "/U"
+            Case "上型"
+                filePath2 = filePath2 & "/U"
+            Case "下型"
+                filePath2 = filePath2 & "/D"
         End Select
 
         Try
@@ -536,4 +622,6 @@ Public Class Form1
     Private Sub PictureBox1_Click(sender As Object, e As EventArgs) Handles PictureBox1.Click
 
     End Sub
+
+
 End Class
