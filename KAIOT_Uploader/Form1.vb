@@ -90,11 +90,11 @@
 
         Select Case ComboBox2.Text
             Case "指定なし"
-                filePath2 = filePath2 & "/U"
+                filePath2 = filePath2 & "_U"
             Case "上型"
-                filePath2 = filePath2 & "/U"
+                filePath2 = filePath2 & "_U"
             Case "下型"
-                filePath2 = filePath2 & "/D"
+                filePath2 = filePath2 & "_D"
         End Select
 
         Return filePath2
@@ -156,7 +156,7 @@
                 Else
                     For Each item As Object In ListBox1.Items
                         Dim itemNum As Integer
-                        Dim itemName As String = item.Replace($"/{targetFolder}/{filePath1}/{filePath2}/", "")
+                        Dim itemName As String = item.Replace($"/{targetFolder}/{filePath1}_{filePath2}_", "")
                         itemName = itemName.Replace(".jpg", "")
 
                         ' ListBox1のアイテム名の中で一番大きい数字をアップロード画像の名前とする。
@@ -177,7 +177,7 @@
 
 
                 ' アップロード先のパスを作成
-                Dim remoteFilePath As String = $"{targetFolder}/{filePath1}/{filePath2}/{itemMaxNum}.jpg"
+                Dim remoteFilePath As String = $"{targetFolder}/{filePath1}_{filePath2}_{itemMaxNum}.jpg"
 
                 ' FTPスクリプトを作成
                 Dim ftpCommands As String = String.Join(Environment.NewLine, {
@@ -348,7 +348,7 @@
         End If
 
         ' selectedFileはフルパスなので、画像名だけに絞る
-        selectedFile = selectedFile.Replace($"/{targetFolder}/{filePath1}/{filePath2}/", "")
+        selectedFile = selectedFile.Replace($"/{targetFolder}_{filePath1}_{filePath2}_", "")
 
         ' 一時ファイルのパスを生成
         Dim localTempFile As String = IO.Path.Combine(IO.Path.GetTempPath(), selectedFile)
@@ -359,7 +359,7 @@
             $"open {ftpServer}",
             ftpUserName,
             ftpPassword,
-            $"cd {targetFolder}/{filePath1}/{filePath2}",
+            $"cd {targetFolder}",
             $"get {selectedFile} {localTempFile}", ' ファイルをダウンロード
             "bye"
         })
@@ -497,7 +497,7 @@
                 $"open {ftpServer}",
                 ftpUserName,
                 ftpPassword,
-                $"cd {targetFolder}/{filePath1}/{filePath2}",
+                $"cd {targetFolder}",
                 "ls *.jpg",  ' .jpgファイルのみをリスト
                 "bye"
             })
